@@ -10,15 +10,13 @@ const schema = a.schema({
   CoffeeCup: a
     .model({
       customer: a.belongsTo('Customer', 'customerId'),
-      customerId: a.id()
+      customerId: a.id().required(),
     })
-    .authorization((allow) => [
-      allow.authenticated(),
-      allow.publicApiKey().to(['read'])
-    ]),
+    .disableOperations(['update', 'delete'])
 })
 .authorization((allow) => [
-  allow.publicApiKey()
+  allow.authenticated(),
+  allow.publicApiKey().to(['read'])
 ]);
 
 export type Schema = ClientSchema<typeof schema>;
