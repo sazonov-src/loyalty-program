@@ -4,31 +4,30 @@ import { generateClient } from "aws-amplify/data";
 import { type Schema } from '../amplify/data/resource'
 import { useState, useEffect } from 'react';
 
-
+const userId = "59a0ecad-9939-4c7d-a6d3-aaae198a4fbe";
 
 export default function App() {
   const client = generateClient<Schema>();
-  const [ bonuses, setBonuses ] = useState<Array<any>>([]);
+  const [ bonuses, setBonuses ] = useState<number>(0);
 
   async function setBonus() {
-    const { errors, data: newCoffeeCup } =  await client.models.CoffeeCup.create({ 
-      customerId: "222",
-    }, {
-      authMode: "userPool"
-    })
-    console.log(errors, newCoffeeCup)
+    const { data: result, errors: error } = await client
+      .mutations.AddBonus({
+        userId: userId,
+      })
+    if (!result) return;
+    setBonuses(result.bonusPoints ?? 0);
+    console.log(result, error)
   };
 
   async function getBonuses() {
-    const { data: customer } =  await client.models.Customer.get({ 
-      id: "222",
-    }, {
-      authMode: "userPool"
-    });
+    const { data: customer, errors: error } =  await client
+      .models.User.get({ 
+        id: userId,
+      });
     if (!customer) return;
-    const coffeeCups = await customer.coffeeCups()
-    setBonuses(coffeeCups.data);
-    console.log(customer, coffeeCups)
+    setBonuses(customer.bonusPoints ?? 0);
+    console.log(customer, error)
   };
 
   useEffect(() => {
@@ -42,14 +41,7 @@ export default function App() {
       {({ signOut, user }) => (
         <main>
           <h1>Hello {user?.username}</h1>
-
-          <h2>Bonuses</h2>
-          <ul>
-            {bonuses.map((bonus) => (
-              <li key={bonus.id}>{bonus.id}</li>
-            ))}
-          </ul>
-
+          <h2>Bonuses: { bonuses }</h2>
           <button onClick={setBonus}>Set Bonus</button>
           <a onClick={signOut}>Sign out</a>
         </main>
