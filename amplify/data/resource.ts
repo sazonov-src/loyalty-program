@@ -6,7 +6,7 @@ const schema = a.schema({
       bonusPoints: a.integer().default(0),      // Bonus points field
     })
     .authorization((allow) => [
-      allow.authenticated().to(["get", "create"])
+      allow.authenticated().to(["get", "create"]),
     ]),
 
   AddBonus: a
@@ -21,6 +21,21 @@ const schema = a.schema({
     .handler(a.handler.custom({
       dataSource: a.ref("User"),
       entry: './add-bonus.js',
+    })),
+
+  WriteOffBonuses: a
+    .mutation()
+    .arguments({
+      userId: a.id().required(),
+      decrement: a.integer().required(),
+    })
+    .returns(a.ref("User"))
+    .authorization((allow) => [
+      allow.authenticated(),
+    ])
+    .handler(a.handler.custom({
+      dataSource: a.ref("User"),
+      entry: './write-off-bonuses.js',
     })),
 })
 

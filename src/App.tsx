@@ -30,11 +30,17 @@ export default function App() {
     console.log(customer, error)
   };
 
+  async function writeOffBonuses() {
+    await client
+      .mutations.WriteOffBonuses({
+        userId: userId,
+        decrement: 5
+      }).catch(err => console.log(err));
+  };
+
   useEffect(() => {
     getBonuses();
   }, []);
-
-  getBonuses();
 
   return (
     <Authenticator>
@@ -43,6 +49,7 @@ export default function App() {
           <h1>Hello {user?.username}</h1>
           <h2>Bonuses: { bonuses }</h2>
           <button onClick={setBonus}>Set Bonus</button>
+          <button onClick={writeOffBonuses}>Write Off Bonuses</button>
           <a onClick={signOut}>Sign out</a>
         </main>
       )}
