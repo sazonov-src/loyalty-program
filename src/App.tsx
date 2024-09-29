@@ -31,11 +31,17 @@ export default function App() {
   };
 
   async function writeOffBonuses() {
-    await client
+    const { data: customer, errors: error } = await client
       .mutations.WriteOffBonuses({
         userId: userId,
         decrement: 5
-      }).catch(err => console.log(err));
+      })
+    if (!customer) {
+      alert("not enough bonuses");
+      return;
+    }
+    setBonuses(customer.bonusPoints ?? 0);
+    console.log(customer, error)
   };
 
   useEffect(() => {

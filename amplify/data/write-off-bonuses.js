@@ -28,5 +28,6 @@ export function request(ctx) {
 }
 
 export function response(ctx) {
+  console.log(ctx);
   return ctx.result;
 }
