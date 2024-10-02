@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+
 const userId = "fdd53ed9-d0ee-4ccf-a72e-8178e009df83";
 const wrighOff = [5, 7, 10];
 const client = generateClient<Schema>();
@@ -31,6 +32,7 @@ interface StateContextType {
 }
 
 const BonusesContext = createContext<StateContextType | undefined>(undefined);
+const CustomerContext = createContext<string | undefined>(undefined);
 
 function SetBonusButton() {
   const context = useContext(BonusesContext);
@@ -110,7 +112,7 @@ function WriteOffBonusesButton( {
 }
 
 
-export default function App() {
+function CustomerScreen({ customerId }: { customerId: string }) {
 
   const [ bonuses, setBonuses ] = useState<number>(0);
 
@@ -121,7 +123,7 @@ export default function App() {
   async function getBonuses() {
     const { data: customer } = await client
       .models.User.get({ 
-        id: userId,
+        id: customerId,
       });
     if (!customer) return;
     setBonuses(customer.bonusPoints ?? 0);
@@ -129,36 +131,61 @@ export default function App() {
 
   return (
     <BonusesContext.Provider value={{ value: bonuses, setValue: setBonuses }}>
-      <div className="flex flex-col items-center justify-center h-screen"> 
-      <Authenticator>
-        {({ signOut }) => (
-          <>
-          <h1 className="text-3xl font-bold mb-6">
-            Бонуси клієнта { userId }
-          </h1>
+      <h1 className="text-3xl font-bold mb-6">
+        Бонуси клієнта { userId }
+      </h1>
 
-          <div className="text-2xl mb-6">
-            Поточні бонуси: { bonuses }
-          </div>
+      <div className="text-2xl mb-6">
+        Поточні бонуси: { bonuses }
+      </div>
 
-          <SetBonusButton />
+      <SetBonusButton />
 
-          <Separator className="my-6" />
+      <Separator className="my-6" />
 
-          <div className="space-x-4 mb-16">
-            { wrighOff.map((num) => (
-              <WriteOffBonusesButton count={ num } />
-            ))}
-          </div>
-
-          <Button onClick={ signOut } variant='link' >
-            Вихід
-          </Button>
-          </>
-        )}
-      </Authenticator>
+      <div className="space-x-4 mb-16">
+        { wrighOff.map((num) => (
+          <WriteOffBonusesButton count={ num } />
+        ))}
     </div>      
     </BonusesContext.Provider>
   );
 };
 
+export default function App() {
+  const [ customer, setCustomer ] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+  }, [customer]);
+
+  return (
+      <Authenticator>
+        {({ signOut }) => (
+          <div className="flex flex-col items-center justify-center h-screen"> 
+            { customer && 
+              typeof customer === 'string' &&
+              customer.trim() !== '' ? (
+              <>
+                <CustomerScreen customerId={customer} />
+
+                <Button 
+                   onClick={ () => setCustomer(undefined) }
+                   className='m-12'
+                > 
+                   Змінити клієнта
+                </Button>
+
+                <Button onClick={ signOut } variant='link' >
+                  Вихід
+                </Button>
+              </>
+            ) : (
+              <Button onClick={ () => setCustomer('fdd53ed9-d0ee-4ccf-a72e-8178e009df83') }> 
+                 Новий клієнт 
+              </Button>
+            )}
+          </div>
+        )}
+      </Authenticator>
+  );
+}
