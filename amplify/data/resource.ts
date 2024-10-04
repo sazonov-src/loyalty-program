@@ -14,7 +14,7 @@ const schema = a.schema({
     .arguments({
       userId: a.id().required(),
     })
-    .returns(a.ref("User"))
+    .returns(a.ref("User").required())
     .authorization((allow) => [
       allow.authenticated()
     ])
@@ -29,7 +29,7 @@ const schema = a.schema({
       userId: a.id().required(),
       decrement: a.integer().required(),
     })
-    .returns(a.ref("User"))
+    .returns(a.ref("User").required())
     .authorization((allow) => [
       allow.authenticated(),
     ])

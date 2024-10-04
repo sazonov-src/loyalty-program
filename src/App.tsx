@@ -1,12 +1,10 @@
 import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import { generateClient } from "aws-amplify/data";
-import { type Schema } from '../amplify/data/resource'
 import { 
   useState, useEffect,
-  createContext, 
-  useContext,
 } from 'react';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator"
 import {
@@ -21,32 +19,31 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+import { type Schema } from "../amplify/data/resource";
 
-const userId = "fdd53ed9-d0ee-4ccf-a72e-8178e009df83";
 const wrighOff = [5, 7, 10];
 const client = generateClient<Schema>();
 
-interface StateContextType {
-  value: number;
-  setValue: (value: number) => void;
+type CustomerSchema = Schema["User"]["type"];
+
+interface CustomerStateType {
+  customer: CustomerSchema;
+  setCustomer: (value: CustomerSchema) => void;
 }
 
-const BonusesContext = createContext<StateContextType | undefined>(undefined);
-const CustomerContext = createContext<string | undefined>(undefined);
-
-function SetBonusButton() {
-  const context = useContext(BonusesContext);
-  if (!context) throw new Error("useTheme must be used within a ThemeProvider");
-  const {setValue: setBonuses} = context;
+function SetBonusButton({customer, setCustomer}: CustomerStateType) {
   
-  async function setBonus() {
-    const { data: result, errors: error } = await client
+  function setBonus() {
+    client
       .mutations.AddBonus({
-        userId: userId,
+        userId: customer.id,
+      }).then(({ data }) => {
+        if (data) {
+          setCustomer(data);
+        } else {
+          console.log(data);
+        }
       })
-    if (!result) return;
-    setBonuses(result.bonusPoints ?? 0);
-    console.log(result, error)
   };
 
   return (
@@ -78,25 +75,21 @@ function SetBonusButton() {
   );
 }
 
-function WriteOffBonusesButton( { 
-  count, 
-}: { count: number } ) {
-  const context = useContext(BonusesContext);
-  if (!context) throw new Error("useTheme must be used within a ThemeProvider");
-  const {setValue: setBonuses} = context;
+function WriteOffBonusesButton(
+  {customer, setCustomer, count}: CustomerStateType & { count: number }) {
   
-  async function writeOffBonuses() {
-    const { data: customer, errors: error } = await client
+  function writeOffBonuses() {
+    client
       .mutations.WriteOffBonuses({
-        userId: userId,
+        userId: customer.id,
         decrement: count
+      }).then(({ data }) => {
+        if (data) {
+          setCustomer(data);
+        } else {
+          console.log(data);
+        }
       })
-    if (!customer) {
-      alert("not enough bonuses");
-      return;
-    }
-    setBonuses(customer.bonusPoints ?? 0);
-    console.log(customer, error)
   };
 
   return (
@@ -111,81 +104,75 @@ function WriteOffBonusesButton( {
   );
 }
 
-
-function CustomerScreen({ customerId }: { customerId: string }) {
-
-  const [ bonuses, setBonuses ] = useState<number>(0);
-
-  useEffect(() => {
-    getBonuses();
-  }, []);
-
-  async function getBonuses() {
-    const { data: customer } = await client
-      .models.User.get({ 
-        id: customerId,
-      });
-    if (!customer) return;
-    setBonuses(customer.bonusPoints ?? 0);
-  }
-
-  return (
-    <BonusesContext.Provider value={{ value: bonuses, setValue: setBonuses }}>
-      <h1 className="text-3xl font-bold mb-6">
-        Бонуси клієнта { userId }
-      </h1>
-
-      <div className="text-2xl mb-6">
-        Поточні бонуси: { bonuses }
-      </div>
-
-      <SetBonusButton />
-
-      <Separator className="my-6" />
-
-      <div className="space-x-4 mb-16">
-        { wrighOff.map((num) => (
-          <WriteOffBonusesButton count={ num } />
-        ))}
-    </div>      
-    </BonusesContext.Provider>
-  );
-};
-
 export default function App() {
-  const [ customer, setCustomer ] = useState<string | undefined>(undefined);
+
+  const [ customer, setCustomer ] = useState<Schema["User"]["type"] | null>(null);
 
   useEffect(() => {
   }, [customer]);
 
+  function getCustomer(customerId: string) {
+    client
+      .models.User.get({ 
+        id: customerId,
+      })
+      .then(({ data }) => {
+        setCustomer(data);
+      })
+      .catch((err) => alert(err));
+  }
+
   return (
-      <Authenticator>
-        {({ signOut }) => (
           <div className="flex flex-col items-center justify-center h-screen"> 
-            { customer && 
-              typeof customer === 'string' &&
-              customer.trim() !== '' ? (
+      <Authenticator hideSignUp={true}>
+        {({ signOut }) => (
+          <> 
+            { customer ? (
               <>
-                <CustomerScreen customerId={customer} />
+                <h1 className="text-3xl font-bold mb-6">
+                  Бонуси клієнта { customer.id }
+                </h1>
 
-                <Button 
-                   onClick={ () => setCustomer(undefined) }
-                   className='m-12'
-                > 
-                   Змінити клієнта
-                </Button>
+                <div className="text-2xl mb-6">
+                  Поточні бонуси: { customer.bonusPoints }
+                </div>
 
-                <Button onClick={ signOut } variant='link' >
-                  Вихід
-                </Button>
+                <SetBonusButton {...{ customer, setCustomer }}/>
+
+                <Separator className="my-6" />
+
+                <div className="space-x-4 mb-16">
+                  { wrighOff.map((num) => (
+                    <WriteOffBonusesButton {...{ 
+                      customer, 
+                      setCustomer, 
+                      count: num }}/>
+                  ))}
+                </div>      
+
               </>
             ) : (
-              <Button onClick={ () => setCustomer('fdd53ed9-d0ee-4ccf-a72e-8178e009df83') }> 
-                 Новий клієнт 
-              </Button>
+              <div className="w-[500px] h-[500px]">
+                <Scanner onScan={
+                  (result) => getCustomer(
+                    'fdd53ed9-d0ee-4ccf-a72e-8178e009df83'
+                    // result[0].rawValue.toString()
+                  )} />
+              </div>
             )}
-          </div>
+              <Button 
+                 onClick={ () => setCustomer(null) }
+                 className='m-12'
+              > 
+                 Змінити клієнта
+              </Button>
+
+              <Button onClick={ signOut } variant='link' >
+                Вихід
+              </Button>
+          </>
         )}
       </Authenticator>
+    </div>
   );
 }
