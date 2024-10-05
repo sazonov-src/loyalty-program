@@ -2,7 +2,7 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import { generateClient } from "aws-amplify/data";
 import { 
-  useState, useEffect, FC
+  useState, useEffect
 } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 
@@ -183,7 +183,7 @@ export default function App() {
             ) : (
               <div className="w-[500px] h-[500px]">
                 <Scanner onScan={
-                  () => getCustomer(
+                  (result) => getCustomer(
                     result[0].rawValue.toString()
                   )} />
               </div>
