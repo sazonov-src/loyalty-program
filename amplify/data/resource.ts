@@ -3,7 +3,7 @@ import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 const schema = a.schema({
   User: a
     .model({
-      bonusPoints: a.integer().default(0),      // Bonus points field
+      bonusPoints: a.integer().required().default(0),      // Bonus points field
     })
     .authorization((allow) => [
       allow.authenticated().to(["get", "create"]),

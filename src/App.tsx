@@ -2,11 +2,14 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import { generateClient } from "aws-amplify/data";
 import { 
-  useState, useEffect,
+  useState, useEffect, FC
 } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
+
 import { Button } from '@/components/ui/button';
 import { Separator } from "@/components/ui/separator"
+import { useToast } from "@/hooks/use-toast"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +35,7 @@ interface CustomerStateType {
 }
 
 function SetBonusButton({customer, setCustomer}: CustomerStateType) {
+  const { toast } = useToast();
   
   function setBonus() {
     client
@@ -40,10 +44,16 @@ function SetBonusButton({customer, setCustomer}: CustomerStateType) {
       }).then(({ data }) => {
         if (data) {
           setCustomer(data);
-        } else {
-          console.log(data);
-        }
-      })
+        } 
+        toast(data ? {
+          title: "Success",
+          description: "Bonus added"
+        } : {
+          title: "Error",
+          description: "Bonus not added",
+          variant: "destructive",
+        })
+      }).catch((err) => alert(err));
   };
 
   return (
@@ -77,6 +87,8 @@ function SetBonusButton({customer, setCustomer}: CustomerStateType) {
 
 function WriteOffBonusesButton(
   {customer, setCustomer, count}: CustomerStateType & { count: number }) {
+  const { toast } = useToast();
+
   
   function writeOffBonuses() {
     client
@@ -86,10 +98,17 @@ function WriteOffBonusesButton(
       }).then(({ data }) => {
         if (data) {
           setCustomer(data);
-        } else {
-          console.log(data);
-        }
-      })
+        } 
+        toast( data ? { 
+          title: "Success", 
+          description: `${ count } bonuses have been written off`
+        } : {
+          title: "Error",
+          description: "Customer not found",
+          variant: "destructive",
+        })
+
+      }).catch((err) => alert(err));
   };
 
   return (
@@ -98,6 +117,7 @@ function WriteOffBonusesButton(
       variant="outline"
       size="sm"
       className="mb-4"
+      disabled={count > customer.bonusPoints}
     >
       Write Off {count} Bonuses
     </Button>
@@ -106,7 +126,8 @@ function WriteOffBonusesButton(
 
 export default function App() {
 
-  const [ customer, setCustomer ] = useState<Schema["User"]["type"] | null>(null);
+  const [ customer, setCustomer ] = useState<CustomerSchema | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
   }, [customer]);
@@ -117,7 +138,15 @@ export default function App() {
         id: customerId,
       })
       .then(({ data }) => {
-        setCustomer(data);
+          toast( data ? { 
+            title: "Success", 
+            description: "Customer found"
+          } : {
+            title: "Error",
+            description: "Customer not found",
+            variant: "destructive",
+          })
+        setCustomer(data)
       })
       .catch((err) => alert(err));
   }
@@ -154,7 +183,7 @@ export default function App() {
             ) : (
               <div className="w-[500px] h-[500px]">
                 <Scanner onScan={
-                  (result) => getCustomer(
+                  () => getCustomer(
                     result[0].rawValue.toString()
                   )} />
               </div>
