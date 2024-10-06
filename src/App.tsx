@@ -145,7 +145,6 @@ function WriteOffBonusesButton(
       <Button
         variant="outline"
         size="sm"
-        className="mb-4"
       >
         Write Off {count} Bonuses
       </Button>
@@ -184,35 +183,37 @@ export default function App() {
   }
 
   return (
-          <div className="flex flex-col items-center justify-center h-screen"> 
+      <div className="flex flex-col items-center justify-center h-screen"> 
       <Authenticator hideSignUp={true}>
         {({ signOut }) => (
           <> 
             { customer ? (
-              <>
-                <h1 className="text-3xl font-bold mb-6">
-                  Бонуси клієнта { customer.id }
-                </h1>
-
-                <div className="text-2xl mb-6">
-                  Поточні бонуси: { customer.bonusPoints }
-                </div>
-
-                <SetBonusButton {...{ customer, setCustomer }}/>
-
-                { newWriteOff.length > 0 && (
-                <div className="space-x-4 mb-16">
-                  <Separator className="my-6" />
-                  { newWriteOff.map((num) => (
-                    <WriteOffBonusesButton {...{ 
-                      customer, 
-                      setCustomer, 
-                      count: num }}/>
-                  ))}
-                </div>      
-                )}
-
-              </>
+              <Card className=''>
+                <CardHeader className='flex flex-col items-center justify-center'>
+                  <CardTitle>Бонуси клієнта</CardTitle>
+                  <CardDescription>{ customer.id }</CardDescription>
+                </CardHeader>
+                <CardContent className='flex flex-col items-center justify-center'>
+                  <p className='text-5xl font-bold'>{ customer.bonusPoints }</p>
+                </CardContent>
+                <CardFooter className='flex flex-col items-center justify-center'>
+                  <SetBonusButton {...{ customer, setCustomer }}/>
+                  { newWriteOff.length > 0 && (
+                    <>
+                    <Separator className="my-5" />
+                    <div className='flex space-x-4'>
+                    { newWriteOff.map((num) => (
+                      <WriteOffBonusesButton 
+                      {...{ 
+                        customer, 
+                        setCustomer, 
+                        count: num }}/>
+                    ))}
+                    </div>
+                    </>
+                  )}
+                </CardFooter>
+              </Card>
             ) : (
               <div className="w-[500px] h-[500px]">
                 <Scanner onScan={
@@ -226,7 +227,7 @@ export default function App() {
                  onClick={ () => setCustomer(null) }
                  className='m-12'
               > 
-                 Змінити клієнта
+                Завершити сеанс
               </Button>
 
               <Button onClick={ signOut } variant='link' >
