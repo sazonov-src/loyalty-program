@@ -11,6 +11,15 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -32,6 +41,35 @@ type CustomerSchema = Schema["User"]["type"];
 interface CustomerStateType {
   customer: CustomerSchema;
   setCustomer: (value: CustomerSchema) => void;
+}
+
+interface ButtonAlertDialogProps {
+  children: React.ReactNode
+  title: string
+  description: string
+  onClick: () => void
+}
+
+function MyAlertDialog({children, title, description, onClick}: ButtonAlertDialogProps) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger>
+        {children}
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onClick}
+          >Continue</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
 }
 
 function SetBonusButton({customer, setCustomer}: CustomerStateType) {
@@ -57,31 +95,18 @@ function SetBonusButton({customer, setCustomer}: CustomerStateType) {
   };
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger>
-        <Button
-          variant="default"
-          size="lg"
-        >
-          Set Bonus
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete your account
-            and remove your data from our servers.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={setBonus}
-          >Continue</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <MyAlertDialog
+      title="Set Bonus"
+      description="Are you sure you want to set bonus?"
+      onClick={setBonus}
+    >
+      <Button
+        variant="default"
+        size="lg"
+      >
+        Set Bonus
+      </Button>
+    </MyAlertDialog>
   );
 }
 
@@ -111,16 +136,20 @@ function WriteOffBonusesButton(
       }).catch((err) => alert(err));
   };
 
-  return (
-    <Button
+  return  (
+    <MyAlertDialog
+      title="Write Off Bonuses"
+      description="Are you sure you want to write off {count} bonuses?"
       onClick={writeOffBonuses}
-      variant="outline"
-      size="sm"
-      className="mb-4"
-      disabled={count > customer.bonusPoints}
     >
-      Write Off {count} Bonuses
-    </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="mb-4"
+      >
+        Write Off {count} Bonuses
+      </Button>
+    </MyAlertDialog>
   );
 }
 
@@ -128,6 +157,9 @@ export default function App() {
 
   const [ customer, setCustomer ] = useState<CustomerSchema | null>(null);
   const { toast } = useToast();
+  const newWriteOff = wrighOff.filter((num) => customer && customer.bonusPoints >= num);
+
+  console.log({ newWriteOff });
 
   useEffect(() => {
   }, [customer]);
@@ -168,23 +200,25 @@ export default function App() {
 
                 <SetBonusButton {...{ customer, setCustomer }}/>
 
-                <Separator className="my-6" />
-
+                { newWriteOff.length > 0 && (
                 <div className="space-x-4 mb-16">
-                  { wrighOff.map((num) => (
+                  <Separator className="my-6" />
+                  { newWriteOff.map((num) => (
                     <WriteOffBonusesButton {...{ 
                       customer, 
                       setCustomer, 
                       count: num }}/>
                   ))}
                 </div>      
+                )}
 
               </>
             ) : (
               <div className="w-[500px] h-[500px]">
                 <Scanner onScan={
-                  (result) => getCustomer(
-                    result[0].rawValue.toString()
+                  () => getCustomer(
+                    // result[0].rawValue.toString()
+                    "b7d5ada8-2044-4ffe-9ce0-45281049d0f7"
                   )} />
               </div>
             )}
