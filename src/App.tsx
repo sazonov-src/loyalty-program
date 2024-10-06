@@ -217,9 +217,9 @@ export default function App() {
             ) : (
               <div className="w-[500px] h-[500px]">
                 <Scanner onScan={
-                  () => getCustomer(
-                    // result[0].rawValue.toString()
-                    "b7d5ada8-2044-4ffe-9ce0-45281049d0f7"
+                  (result) => getCustomer(
+                    result[0].rawValue.toString()
+                    // "b7d5ada8-2044-4ffe-9ce0-45281049d0f7"
                   )} />
               </div>
             )}
