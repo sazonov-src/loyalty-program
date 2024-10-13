@@ -1,40 +1,43 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 
 const schema = a.schema({
-  User: a
+  Bonuses: a
     .model({
-      bonusPoints: a.integer().required().default(0),      // Bonus points field
+      bonusPoints: a.integer().default(0),      // Bonus points field
+      owner: a.string().required(),
     })
     .authorization((allow) => [
-      allow.authenticated().to(["get", "create"]),
-    ]),
+      allow.owner().to(["get"]),
+      allow.group("admin").to(["get"]),
+    ])
+    .identifier(["owner"]),
 
   AddBonus: a
     .mutation()
     .arguments({
-      userId: a.id().required(),
+      owner: a.string().required(),
     })
-    .returns(a.ref("User").required())
+    .returns(a.ref("Bonuses").required())
     .authorization((allow) => [
-      allow.authenticated()
+      allow.group("admin"),
     ])
     .handler(a.handler.custom({
-      dataSource: a.ref("User"),
+      dataSource: a.ref("Bonuses"),
       entry: './add-bonus.js',
     })),
 
   WriteOffBonuses: a
     .mutation()
     .arguments({
-      userId: a.id().required(),
+      owner: a.string().required(),
       decrement: a.integer().required(),
     })
-    .returns(a.ref("User").required())
+    .returns(a.ref("Bonuses").required())
     .authorization((allow) => [
-      allow.authenticated(),
+      allow.group("admin"),
     ])
     .handler(a.handler.custom({
-      dataSource: a.ref("User"),
+      dataSource: a.ref("Bonuses"),
       entry: './write-off-bonuses.js',
     })),
 })
