@@ -3,19 +3,17 @@ import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 const schema = a.schema({
   Bonuses: a
     .model({
-      bonusPoints: a.integer().default(0),      // Bonus points field
-      owner: a.string().required(),
+      bonusPoints: a.integer().default(0)
     })
     .authorization((allow) => [
-      allow.owner().to(["get"]),
+      allow.ownerDefinedIn("id").to(["get"]),
       allow.group("admin").to(["get"]),
-    ])
-    .identifier(["owner"]),
+    ]),
 
   AddBonus: a
     .mutation()
     .arguments({
-      owner: a.string().required(),
+      id: a.string().required(),
     })
     .returns(a.ref("Bonuses").required())
     .authorization((allow) => [
@@ -29,7 +27,7 @@ const schema = a.schema({
   WriteOffBonuses: a
     .mutation()
     .arguments({
-      owner: a.string().required(),
+      id: a.string().required(),
       decrement: a.integer().required(),
     })
     .returns(a.ref("Bonuses").required())

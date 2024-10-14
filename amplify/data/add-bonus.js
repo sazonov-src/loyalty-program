@@ -4,7 +4,7 @@ import { util } from '@aws-appsync/utils';
 export function request(ctx) {
   return {
     operation: 'UpdateItem',
-    key: util.dynamodb.toMapValues({ owner: ctx.args.owner }),
+    key: util.dynamodb.toMapValues({ id: ctx.args.owner }),
     update: {
       expression: 'ADD bonusPoints :plusOne',
       expressionValues: { ':plusOne': { N: 1 } },
