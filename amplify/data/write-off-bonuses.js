@@ -4,7 +4,7 @@ import { util } from '@aws-appsync/utils';
 export function request(ctx) {
   return {
     operation: 'UpdateItem',
-    key: util.dynamodb.toMapValues({ id: ctx.args.owner }),
+    key: util.dynamodb.toMapValues({ id: ctx.args.id }),
     update: {
       expression: 'SET #points = if_not_exists(#points, :initial) - :decrement',
       expressionNames: {
