@@ -45,7 +45,7 @@ export const handler: PostConfirmationTriggerHandler = async (event) => {
         id: event.request.userAttributes.sub,
       },
     },
-  });
+  }).catch((err) => console.error(err));
 
   return event;
 };
